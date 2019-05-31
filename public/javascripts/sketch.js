@@ -553,15 +553,6 @@ function preload() {
       displayIcon: 'images/icon-2.svg',
     },
 
-    lockGroove3: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-3-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-3-loop.mp3'),
-      ),
-      viz: new SpiralVisualization,
-      displayIcon: 'images/icon-3.svg',
-    },
-
     lockGroove4: {
       sound: new LockGroove(
         loadSound('sounds/noise/lock-groove-4-noise.mp3'),
@@ -633,33 +624,6 @@ function preload() {
       viz: new FlowerVisualization,
       displayIcon: 'images/icon-11.svg',
     },
-
-    lockGroove12: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-12-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-12-loop.mp3'),
-      ),
-      viz: new ArcVisualization,
-      displayIcon: 'images/icon-12.svg',
-    },
-
-    lockGroove13: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-13-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-13-loop.mp3'),
-      ),
-      viz: new SnowVisualization,
-      displayIcon: 'images/icon-13.svg',
-    },
-
-    lockGroove14: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-14-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-14-loop.mp3'),
-      ),
-      viz: new RotatingWaveVisualization,
-      displayIcon: 'images/icon-14.svg',
-    },
   };
 
 
@@ -708,6 +672,7 @@ function createSoundButton(key, displayIcon) {
   const button = document.createElement('button');
 
   button.classList.add('soundTrigger');
+  button.classList.add(displayIcon.replace(/\W/, '_'));
 
   button.addEventListener('click', (event) => {
     const fadeOut = !event.shiftKey;
@@ -752,9 +717,9 @@ function setup() {
 
     function createLayer(odd) {
       const el = document.createElement('div');
-      
+
       el.classList.add('soundBoardTriggerLayer', odd ? 'odd' : 'even');
-      
+
       return el;
     }
 
