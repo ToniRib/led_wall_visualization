@@ -666,8 +666,6 @@ function initEventListeners() {
       return val.soundDef.charCode === keyCode;
     });
 
-    console.log('def:', def);
-
     if (def) {
       const [defId] = def;
 
@@ -676,9 +674,9 @@ function initEventListeners() {
       console.log('soundDef', soundDefinitions[defId]);
     }
 
-    console.log('button', button);
-
-    toggleSoundTrigger(button)
+    if (button) {
+      toggleSoundTrigger(button)
+    }
   });
 
   const recordButton = document.querySelector('#toggleRecord');
