@@ -542,6 +542,7 @@ function preload() {
       ),
       viz: new EllipseVisualization,
       displayIcon: 'images/icon-1.svg',
+      charCode: 48
     },
 
     lockGroove2: {
@@ -551,6 +552,7 @@ function preload() {
       ),
       viz: new LineVibrationVisualization,
       displayIcon: 'images/icon-2.svg',
+      charCode: 49
     },
 
     lockGroove4: {
@@ -560,6 +562,7 @@ function preload() {
       ),
       viz: new AmpVisualization,
       displayIcon: 'images/icon-4.svg',
+      charCode: 50
     },
 
     lockGroove5: {
@@ -569,6 +572,7 @@ function preload() {
       ),
       viz: new SpectrumVisualization,
       displayIcon: 'images/icon-5.svg',
+      charCode: 51
     },
 
     lockGroove6: {
@@ -578,6 +582,7 @@ function preload() {
       ),
       viz: new RadialVisualization,
       displayIcon: 'images/icon-6.svg',
+      charCode: 52
     },
 
     lockGroove7: {
@@ -587,6 +592,7 @@ function preload() {
       ),
       viz: new ParticleScurryVisualization,
       displayIcon: 'images/icon-7.svg',
+      charCode: 53
     },
 
     lockGroove8: {
@@ -596,6 +602,7 @@ function preload() {
       ),
       viz: new CurveVisualization,
       displayIcon: 'images/icon-8.svg',
+      charCode: 54
     },
 
     lockGroove9: {
@@ -605,6 +612,7 @@ function preload() {
       ),
       viz: new HelixVisualization,
       displayIcon: 'images/icon-9.svg',
+      charCode: 55
     },
 
     lockGroove10: {
@@ -614,6 +622,7 @@ function preload() {
       ),
       viz: new StationaryCircleVisualization,
       displayIcon: 'images/icon-10.svg',
+      charCode: 56
     },
 
     lockGroove11: {
@@ -623,6 +632,7 @@ function preload() {
       ),
       viz: new FlowerVisualization,
       displayIcon: 'images/icon-11.svg',
+      charCode: 57
     },
   };
 
@@ -664,7 +674,7 @@ function stopAll() {
   document.querySelectorAll('.soundTrigger').forEach((el) => toggleSoundTrigger(el, false));
 }
 
-function createSoundButton(key, displayIcon) {
+function createSoundButton(key, displayIcon, charCode) {
   const container = document.createElement('div');
 
   container.classList.add('soundTriggerContainer');
@@ -672,14 +682,8 @@ function createSoundButton(key, displayIcon) {
   const button = document.createElement('button');
 
   button.classList.add('soundTrigger');
-  button.classList.add(displayIcon.replace(/\W/, '_'));
-
-  button.addEventListener('click', (event) => {
-    const fadeOut = !event.shiftKey;
-
-    toggleSound(key, defaultFadeDuration);
-    toggleSoundTrigger(button);
-  });
+  button.dataset.charCode = charCode;
+  button.dataset.key = key;
 
   const svgObject = document.createElement('object');
 
@@ -710,7 +714,7 @@ function setup() {
   const soundBoardBg = document.querySelector('#soundBoardBg');
 
   const soundButtons = Object.entries(soundDefs).map(([key, soundDefinition], index) =>
-    createSoundButton(key, soundDefinition.displayIcon));
+    createSoundButton(key, soundDefinition.displayIcon, soundDefinition.charCode));
 
   function groupSoundButtons(elements) {
     let layer;
@@ -791,6 +795,13 @@ function setCanvasDimensions() {
 
 function initEventListeners() {
   window.addEventListener('resize', setCanvasDimensions);
+  window.addEventListener('keydown', (event) => {
+    const button = document.querySelector(`.soundTriggerContainer button[data-char-code="${event.keyCode}"]`);
+    const key = button.dataset.key;
+
+    toggleSound(key, defaultFadeDuration);
+    toggleSoundTrigger(button)
+  });
 
   const recordButton = document.querySelector('#toggleRecord');
   recordButton.addEventListener('click', toggleRecordState);
