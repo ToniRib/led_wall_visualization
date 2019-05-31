@@ -724,7 +724,7 @@ function setup() {
     }
 
     elements.forEach((el, idx) => {
-      if (idx % 7 === 0) {
+      if (idx % 5 === 0) {
         layer = createLayer(Boolean((idx + 1) % 2));
         soundBoardContainer.insertBefore(layer, soundBoardBg);
       }
