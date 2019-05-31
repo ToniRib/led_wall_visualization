@@ -403,115 +403,25 @@ const SpectrumVisualization = class extends Visualization {
   }
 };
 
-const LockGroove = class {
-  constructor(noise, groove) {
-    this.noise = noise;
-    this.groove = groove;
-    this.fadeTimeMs = 3000;
-    this.defaultGainValue = 1;
-
-    this.noise.setLoop(false);
-    this.groove.setLoop(false);
-
-    this.noise.onended(() => {
-      this.groove.loop()
-    });
-
-    this.noise.disconnect();
-    this.groove.disconnect();
-
-    this.noiseGain = new p5.Gain();
-    this.grooveGain = new p5.Gain();
-    this.noiseGain.amp(this.defaultGainValue);
-    this.grooveGain.amp(this.defaultGainValue);
-
-    this.noiseGain.setInput(this.noise);
-    this.grooveGain.setInput(this.groove);
-
-    this.noiseGain.connect(masterGain);
-    this.grooveGain.connect(masterGain);
-
-    this.noiseAmplitude = new p5.Amplitude();
-    this.noiseAmplitude.setInput(this.noiseGain);
-    this.noiseFFT = new p5.FFT();
-    this.noiseFFT.setInput(this.noiseGain);
-
-    this.grooveAmplitude = new p5.Amplitude();
-    this.grooveAmplitude.setInput(this.grooveGain);
-    this.grooveFFT = new p5.FFT();
-    this.grooveFFT.setInput(this.grooveGain);
-  }
-
-  isPlaying() {
-    return this.noise.isPlaying() || this.groove.isLooping();
-  }
-
-  loop() {
-    this.noise.play();
-  }
-
-  /**
-   *
-   * @param {Number} durationMs Fade duration in milliseconds
-   * @param {Visualization} visualization Visualization for this sound
-   */
-  fadeAndStop(durationMs = this.fadeTimeMs, visualization) {
-    if (this.noise.isPlaying() || this.groove.isLooping()) {
-      this.noiseGain.amp(0, durationMs / 1000);
-      this.grooveGain.amp(0, durationMs / 1000);
-
-      function delayedStop() {
-        this.noise.stop();
-        this.groove.stop();
-        this.resetGainLevels();
-        visualization.reset();
-      }
-
-      setTimeout(delayedStop.bind(this), durationMs);
-    }
-  }
-
-  stop(fadeOut, visualization) {
-    if (fadeOut) {
-      this.fadeAndStop(fadeOut, visualization);
-    } else {
-      this.noise.stop();
-      this.groove.stop();
-      visualization.reset();
-    }
-  }
-
-  resetGainLevels() {
-    this.noiseGain.amp(this.defaultGainValue);
-    this.grooveGain.amp(this.defaultGainValue);
-  }
-
-  amplitude() {
-    if (this.noise.isPlaying()) return this.noiseAmplitude;
-    if (this.groove.isLooping()) return this.grooveAmplitude;
-  }
-
-  fft() {
-    if (this.noise.isPlaying()) return this.noiseFFT;
-    if (this.groove.isLooping()) return this.grooveFFT;
-  }
-};
-
-const SoundDefinition = class {
-  constructor(sound, visualization = new EllipseVisualization) {
+const VisualizationDefinition = class {
+  constructor(visualization, def) {
     this.viz = visualization;
-    this.sound = sound;
+    this.soundDef= def;
+    this.active = false;
   }
 
   isPlaying() {
-    return this.sound.isPlaying();
+    return this.active;
   }
 
   visualize() {
     if (!this.isPlaying()) return;
 
-    const level = this.sound.amplitude().getLevel();
-    const spectrum = this.sound.fft().analyze();
+    const level = masterAmp.getLevel();
+    const spectrum = masterFFT.analyze();
+
+    console.log('level', level);
+    console.log('spectrum', spectrum);
 
     if (level || spectrum) {
       noFill();
@@ -528,131 +438,81 @@ const defaultFadeDuration = 250;
 let soundBoardContainer;
 let triggerGroupSize = 7;
 
-const masterGain = new p5.Gain();
-masterGain.amp(1);
-masterGain.connect();
+const masterSound = new p5.AudioIn();
+const masterAmp = new p5.Amplitude();
+const masterFFT = new p5.FFT();
 
 // preload is called directly before setup()
 function preload() {
   soundDefs = {
     lockGroove1: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-1-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-1-loop.mp3'),
-      ),
       viz: new EllipseVisualization,
       displayIcon: 'images/icon-1.svg',
-      charCode: 48
+      charCode: 48,
     },
 
     lockGroove2: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-2-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-2-loop.mp3'),
-      ),
       viz: new LineVibrationVisualization,
       displayIcon: 'images/icon-2.svg',
-      charCode: 49
+      charCode: 49,
     },
 
     lockGroove4: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-4-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-4-loop.mp3'),
-      ),
       viz: new AmpVisualization,
       displayIcon: 'images/icon-4.svg',
-      charCode: 50
+      charCode: 50,
     },
 
     lockGroove5: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-5-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-5-loop.mp3'),
-      ),
       viz: new SpectrumVisualization,
       displayIcon: 'images/icon-5.svg',
-      charCode: 51
+      charCode: 51,
     },
 
     lockGroove6: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-6-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-6-loop.mp3'),
-      ),
       viz: new RadialVisualization,
       displayIcon: 'images/icon-6.svg',
-      charCode: 52
+      charCode: 52,
     },
 
     lockGroove7: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-7-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-7-loop.mp3'),
-      ),
       viz: new ParticleScurryVisualization,
       displayIcon: 'images/icon-7.svg',
-      charCode: 53
+      charCode: 53,
     },
 
     lockGroove8: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-8-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-8-loop.mp3'),
-      ),
       viz: new CurveVisualization,
       displayIcon: 'images/icon-8.svg',
-      charCode: 54
+      charCode: 54,
     },
 
     lockGroove9: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-9-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-9-loop.mp3'),
-      ),
       viz: new HelixVisualization,
       displayIcon: 'images/icon-9.svg',
-      charCode: 55
+      charCode: 55,
     },
 
     lockGroove10: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-10-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-10-loop.mp3'),
-      ),
       viz: new StationaryCircleVisualization,
       displayIcon: 'images/icon-10.svg',
-      charCode: 56
+      charCode: 56,
     },
 
     lockGroove11: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-11-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-11-loop.mp3'),
-      ),
       viz: new FlowerVisualization,
       displayIcon: 'images/icon-11.svg',
-      charCode: 57
+      charCode: 57,
     },
   };
 
 
   soundDefinitions = Object.entries(soundDefs).reduce((accum, [key, def]) => {
-    accum[key] = new SoundDefinition(def.sound, def.viz);
+    accum[key] = new VisualizationDefinition(def.viz, def);
 
     return accum
   }, {});
 }
-
-const toggleSound = (id, fadeOut = 0) => {
-  const sound = soundDefs[id].sound;
-
-  if (sound.isPlaying()) {
-    sound.stop(fadeOut, soundDefs[id].viz);
-  } else {
-    sound.loop();
-  }
-};
 
 /**
  *
@@ -749,6 +609,9 @@ function setup() {
   initEventListeners();
 
   document.querySelector('#topLayer').classList.remove('hideUntilLoaded');
+  // masterFFT.setInput(masterSound);
+  // masterAmp.setInput(masterSound);
+  masterSound.start();
 }
 
 function updateSoundBoardLayout() {
@@ -762,7 +625,7 @@ function updateSoundBoardLayout() {
     const items = Array.prototype.slice.call(itemsNodeList);
 
     updateButtonGroup(items, idx)
-  })
+  });
 
   function updateButtonGroup(items, groupIndex) {
     const itemCount = items.length;
@@ -796,10 +659,25 @@ function setCanvasDimensions() {
 function initEventListeners() {
   window.addEventListener('resize', setCanvasDimensions);
   window.addEventListener('keydown', (event) => {
-    const button = document.querySelector(`.soundTriggerContainer button[data-char-code="${event.keyCode}"]`);
-    const key = button.dataset.key;
+    const keyCode = event.keyCode;
+    const button = document.querySelector(`.soundTriggerContainer button[data-char-code="${keyCode}"]`);
 
-    toggleSound(key, defaultFadeDuration);
+    const def = Object.entries(soundDefinitions).find(([key, val]) =>  {
+      return val.soundDef.charCode === keyCode;
+    });
+
+    console.log('def:', def);
+
+    if (def) {
+      const [defId] = def;
+
+      soundDefinitions[defId].active = !soundDefinitions[defId].active;
+
+      console.log('soundDef', soundDefinitions[defId]);
+    }
+
+    console.log('button', button);
+
     toggleSoundTrigger(button)
   });
 
