@@ -417,11 +417,8 @@ const VisualizationDefinition = class {
   visualize() {
     if (!this.isPlaying()) return;
 
-    const level = masterAmp.getLevel();
+    const level = masterSound.getLevel();
     const spectrum = masterFFT.analyze();
-
-    console.log('level', level);
-    console.log('spectrum', spectrum);
 
     if (level || spectrum) {
       noFill();
@@ -438,8 +435,7 @@ const defaultFadeDuration = 250;
 let soundBoardContainer;
 let triggerGroupSize = 7;
 
-const masterSound = new p5.AudioIn();
-const masterAmp = new p5.Amplitude();
+let masterSound;
 const masterFFT = new p5.FFT();
 
 // preload is called directly before setup()
@@ -609,9 +605,16 @@ function setup() {
   initEventListeners();
 
   document.querySelector('#topLayer').classList.remove('hideUntilLoaded');
-  // masterFFT.setInput(masterSound);
-  // masterAmp.setInput(masterSound);
+  masterSound = new p5.AudioIn();
   masterSound.start();
+  masterFFT.setInput(masterSound);
+  // masterSound.getSources(function(deviceList) {
+  //   console.log('********');
+  //   console.log(deviceList);
+  //   console.log('********');
+  //
+  //   masterSound.setSource(2);
+  // });
 }
 
 function updateSoundBoardLayout() {
@@ -678,35 +681,10 @@ function initEventListeners() {
       toggleSoundTrigger(button)
     }
   });
-
-  const recordButton = document.querySelector('#toggleRecord');
-  recordButton.addEventListener('click', toggleRecordState);
-
-  const stopAllButton = document.querySelector('#stopAll');
-  stopAllButton.addEventListener('click', stopAll);
-}
-
-function toggleRecordState(event) {
-  const triggerEl = event.currentTarget;
-  const recordingActive = triggerEl.classList.contains('active');
-
-  if (recordingActive) {
-    recorder.stop();
-    save(soundFile, 'locked-groove-mix.wav');
-    triggerEl.classList.remove('active');
-
-    return
-  }
-
-  triggerEl.classList.add('active');
-
-  recorder = new p5.SoundRecorder();
-  soundFile = new p5.SoundFile();
-
-  recorder.record(soundFile);
 }
 
 function draw() {
   background('black');
+
   Object.values(soundDefinitions).forEach(viz => viz.visualize());
 }
