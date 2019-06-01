@@ -673,8 +673,6 @@ function initEventListeners() {
       const [defId] = def;
 
       soundDefinitions[defId].active = !soundDefinitions[defId].active;
-
-      console.log('soundDef', soundDefinitions[defId]);
     }
 
     if (button) {
