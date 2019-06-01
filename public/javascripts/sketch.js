@@ -292,11 +292,11 @@ const RotatingWaveVisualization = class extends Visualization {
     let numCols = 16;
     let numStrands = 3;
 
-    let colorA = color(28,  32, 38, 50);
+    let colorA = color(28, 32, 38, 50);
     let colorB = color(120, 120, 120, 50);
 
     this.phase = frameCount * speed;
-    const multiplier = map(level, 0,  0.3, 1, 10);
+    const multiplier = map(level, 0, 0.3, 1, 10);
 
     for (let strand = 0; strand < numStrands; strand += 1) {
       let strandPhase = this.phase + map(strand, 0, numStrands, 0, TWO_PI);
@@ -406,7 +406,7 @@ const SpectrumVisualization = class extends Visualization {
 const VisualizationDefinition = class {
   constructor(visualization, def) {
     this.viz = visualization;
-    this.soundDef= def;
+    this.soundDef = def;
     this.active = false;
   }
 
@@ -641,7 +641,7 @@ function updateSoundBoardLayout() {
       // #3 translate to spread items out
       // #4 reorient
       item.style.transform = `
-        translate(${((itemCount/2 - itemIndex) * item.offsetWidth) - item.offsetWidth/2}px)
+        translate(${((itemCount / 2 - itemIndex) * item.offsetWidth) - item.offsetWidth / 2}px)
         rotate(${rotateAngle}deg)
         translate(0, ${baseTranslationPx - (layerDepthPx * groupIndex)}px)
         rotate(-${rotateAngle}deg)
@@ -665,7 +665,7 @@ function initEventListeners() {
     const keyCode = event.keyCode;
     const button = document.querySelector(`.soundTriggerContainer button[data-char-code="${keyCode}"]`);
 
-    const def = Object.entries(soundDefinitions).find(([key, val]) =>  {
+    const def = Object.entries(soundDefinitions).find(([key, val]) => {
       return val.soundDef.charCode === keyCode;
     });
 
