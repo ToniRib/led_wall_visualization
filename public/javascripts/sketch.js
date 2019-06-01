@@ -292,11 +292,11 @@ const RotatingWaveVisualization = class extends Visualization {
     let numCols = 16;
     let numStrands = 3;
 
-    let colorA = color(28,  32, 38, 50);
+    let colorA = color(28, 32, 38, 50);
     let colorB = color(120, 120, 120, 50);
 
     this.phase = frameCount * speed;
-    const multiplier = map(level, 0,  0.3, 1, 10);
+    const multiplier = map(level, 0, 0.3, 1, 10);
 
     for (let strand = 0; strand < numStrands; strand += 1) {
       let strandPhase = this.phase + map(strand, 0, numStrands, 0, TWO_PI);
@@ -403,115 +403,22 @@ const SpectrumVisualization = class extends Visualization {
   }
 };
 
-const LockGroove = class {
-  constructor(noise, groove) {
-    this.noise = noise;
-    this.groove = groove;
-    this.fadeTimeMs = 3000;
-    this.defaultGainValue = 1;
-
-    this.noise.setLoop(false);
-    this.groove.setLoop(false);
-
-    this.noise.onended(() => {
-      this.groove.loop()
-    });
-
-    this.noise.disconnect();
-    this.groove.disconnect();
-
-    this.noiseGain = new p5.Gain();
-    this.grooveGain = new p5.Gain();
-    this.noiseGain.amp(this.defaultGainValue);
-    this.grooveGain.amp(this.defaultGainValue);
-
-    this.noiseGain.setInput(this.noise);
-    this.grooveGain.setInput(this.groove);
-
-    this.noiseGain.connect(masterGain);
-    this.grooveGain.connect(masterGain);
-
-    this.noiseAmplitude = new p5.Amplitude();
-    this.noiseAmplitude.setInput(this.noiseGain);
-    this.noiseFFT = new p5.FFT();
-    this.noiseFFT.setInput(this.noiseGain);
-
-    this.grooveAmplitude = new p5.Amplitude();
-    this.grooveAmplitude.setInput(this.grooveGain);
-    this.grooveFFT = new p5.FFT();
-    this.grooveFFT.setInput(this.grooveGain);
-  }
-
-  isPlaying() {
-    return this.noise.isPlaying() || this.groove.isLooping();
-  }
-
-  loop() {
-    this.noise.play();
-  }
-
-  /**
-   *
-   * @param {Number} durationMs Fade duration in milliseconds
-   * @param {Visualization} visualization Visualization for this sound
-   */
-  fadeAndStop(durationMs = this.fadeTimeMs, visualization) {
-    if (this.noise.isPlaying() || this.groove.isLooping()) {
-      this.noiseGain.amp(0, durationMs / 1000);
-      this.grooveGain.amp(0, durationMs / 1000);
-
-      function delayedStop() {
-        this.noise.stop();
-        this.groove.stop();
-        this.resetGainLevels();
-        visualization.reset();
-      }
-
-      setTimeout(delayedStop.bind(this), durationMs);
-    }
-  }
-
-  stop(fadeOut, visualization) {
-    if (fadeOut) {
-      this.fadeAndStop(fadeOut, visualization);
-    } else {
-      this.noise.stop();
-      this.groove.stop();
-      visualization.reset();
-    }
-  }
-
-  resetGainLevels() {
-    this.noiseGain.amp(this.defaultGainValue);
-    this.grooveGain.amp(this.defaultGainValue);
-  }
-
-  amplitude() {
-    if (this.noise.isPlaying()) return this.noiseAmplitude;
-    if (this.groove.isLooping()) return this.grooveAmplitude;
-  }
-
-  fft() {
-    if (this.noise.isPlaying()) return this.noiseFFT;
-    if (this.groove.isLooping()) return this.grooveFFT;
-  }
-};
-
-const SoundDefinition = class {
-  constructor(sound, visualization = new EllipseVisualization) {
+const VisualizationDefinition = class {
+  constructor(visualization, def) {
     this.viz = visualization;
-    this.sound = sound;
+    this.soundDef = def;
+    this.active = false;
   }
 
   isPlaying() {
-    return this.sound.isPlaying();
+    return this.active;
   }
 
   visualize() {
     if (!this.isPlaying()) return;
 
-    const level = this.sound.amplitude().getLevel();
-    const spectrum = this.sound.fft().analyze();
+    const level = masterSound.getLevel();
+    const spectrum = masterFFT.analyze();
 
     if (level || spectrum) {
       noFill();
@@ -528,157 +435,80 @@ const defaultFadeDuration = 250;
 let soundBoardContainer;
 let triggerGroupSize = 7;
 
-const masterGain = new p5.Gain();
-masterGain.amp(1);
-masterGain.connect();
+let masterSound;
+const masterFFT = new p5.FFT();
 
 // preload is called directly before setup()
 function preload() {
   soundDefs = {
     lockGroove1: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-1-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-1-loop.mp3'),
-      ),
       viz: new EllipseVisualization,
       displayIcon: 'images/icon-1.svg',
+      charCode: 48,
     },
 
     lockGroove2: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-2-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-2-loop.mp3'),
-      ),
       viz: new LineVibrationVisualization,
       displayIcon: 'images/icon-2.svg',
-    },
-
-    lockGroove3: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-3-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-3-loop.mp3'),
-      ),
-      viz: new SpiralVisualization,
-      displayIcon: 'images/icon-3.svg',
+      charCode: 49,
     },
 
     lockGroove4: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-4-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-4-loop.mp3'),
-      ),
       viz: new AmpVisualization,
       displayIcon: 'images/icon-4.svg',
+      charCode: 50,
     },
 
     lockGroove5: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-5-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-5-loop.mp3'),
-      ),
       viz: new SpectrumVisualization,
       displayIcon: 'images/icon-5.svg',
+      charCode: 51,
     },
 
     lockGroove6: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-6-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-6-loop.mp3'),
-      ),
       viz: new RadialVisualization,
       displayIcon: 'images/icon-6.svg',
+      charCode: 52,
     },
 
     lockGroove7: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-7-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-7-loop.mp3'),
-      ),
       viz: new ParticleScurryVisualization,
       displayIcon: 'images/icon-7.svg',
+      charCode: 53,
     },
 
     lockGroove8: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-8-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-8-loop.mp3'),
-      ),
       viz: new CurveVisualization,
       displayIcon: 'images/icon-8.svg',
+      charCode: 54,
     },
 
     lockGroove9: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-9-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-9-loop.mp3'),
-      ),
       viz: new HelixVisualization,
       displayIcon: 'images/icon-9.svg',
+      charCode: 55,
     },
 
     lockGroove10: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-10-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-10-loop.mp3'),
-      ),
       viz: new StationaryCircleVisualization,
       displayIcon: 'images/icon-10.svg',
+      charCode: 56,
     },
 
     lockGroove11: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-11-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-11-loop.mp3'),
-      ),
       viz: new FlowerVisualization,
       displayIcon: 'images/icon-11.svg',
-    },
-
-    lockGroove12: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-12-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-12-loop.mp3'),
-      ),
-      viz: new ArcVisualization,
-      displayIcon: 'images/icon-12.svg',
-    },
-
-    lockGroove13: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-13-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-13-loop.mp3'),
-      ),
-      viz: new SnowVisualization,
-      displayIcon: 'images/icon-13.svg',
-    },
-
-    lockGroove14: {
-      sound: new LockGroove(
-        loadSound('sounds/noise/lock-groove-14-noise.mp3'),
-        loadSound('sounds/loops/lock-groove-14-loop.mp3'),
-      ),
-      viz: new RotatingWaveVisualization,
-      displayIcon: 'images/icon-14.svg',
+      charCode: 57,
     },
   };
 
 
   soundDefinitions = Object.entries(soundDefs).reduce((accum, [key, def]) => {
-    accum[key] = new SoundDefinition(def.sound, def.viz);
+    accum[key] = new VisualizationDefinition(def.viz, def);
 
     return accum
   }, {});
 }
-
-const toggleSound = (id, fadeOut = 0) => {
-  const sound = soundDefs[id].sound;
-
-  if (sound.isPlaying()) {
-    sound.stop(fadeOut, soundDefs[id].viz);
-  } else {
-    sound.loop();
-  }
-};
 
 /**
  *
@@ -700,7 +530,7 @@ function stopAll() {
   document.querySelectorAll('.soundTrigger').forEach((el) => toggleSoundTrigger(el, false));
 }
 
-function createSoundButton(key, displayIcon) {
+function createSoundButton(key, displayIcon, charCode) {
   const container = document.createElement('div');
 
   container.classList.add('soundTriggerContainer');
@@ -708,13 +538,8 @@ function createSoundButton(key, displayIcon) {
   const button = document.createElement('button');
 
   button.classList.add('soundTrigger');
-
-  button.addEventListener('click', (event) => {
-    const fadeOut = !event.shiftKey;
-
-    toggleSound(key, defaultFadeDuration);
-    toggleSoundTrigger(button);
-  });
+  button.dataset.charCode = charCode;
+  button.dataset.key = key;
 
   const svgObject = document.createElement('object');
 
@@ -745,21 +570,21 @@ function setup() {
   const soundBoardBg = document.querySelector('#soundBoardBg');
 
   const soundButtons = Object.entries(soundDefs).map(([key, soundDefinition], index) =>
-    createSoundButton(key, soundDefinition.displayIcon));
+    createSoundButton(key, soundDefinition.displayIcon, soundDefinition.charCode));
 
   function groupSoundButtons(elements) {
     let layer;
 
     function createLayer(odd) {
       const el = document.createElement('div');
-      
+
       el.classList.add('soundBoardTriggerLayer', odd ? 'odd' : 'even');
-      
+
       return el;
     }
 
     elements.forEach((el, idx) => {
-      if (idx % 7 === 0) {
+      if (idx % 5 === 0) {
         layer = createLayer(Boolean((idx + 1) % 2));
         soundBoardContainer.insertBefore(layer, soundBoardBg);
       }
@@ -780,6 +605,16 @@ function setup() {
   initEventListeners();
 
   document.querySelector('#topLayer').classList.remove('hideUntilLoaded');
+  masterSound = new p5.AudioIn();
+  masterSound.start();
+  masterFFT.setInput(masterSound);
+  // masterSound.getSources(function(deviceList) {
+  //   console.log('********');
+  //   console.log(deviceList);
+  //   console.log('********');
+  //
+  //   masterSound.setSource(2);
+  // });
 }
 
 function updateSoundBoardLayout() {
@@ -793,7 +628,7 @@ function updateSoundBoardLayout() {
     const items = Array.prototype.slice.call(itemsNodeList);
 
     updateButtonGroup(items, idx)
-  })
+  });
 
   function updateButtonGroup(items, groupIndex) {
     const itemCount = items.length;
@@ -806,7 +641,7 @@ function updateSoundBoardLayout() {
       // #3 translate to spread items out
       // #4 reorient
       item.style.transform = `
-        translate(${((itemCount/2 - itemIndex) * item.offsetWidth) - item.offsetWidth/2}px)
+        translate(${((itemCount / 2 - itemIndex) * item.offsetWidth) - item.offsetWidth / 2}px)
         rotate(${rotateAngle}deg)
         translate(0, ${baseTranslationPx - (layerDepthPx * groupIndex)}px)
         rotate(-${rotateAngle}deg)
@@ -826,35 +661,28 @@ function setCanvasDimensions() {
 
 function initEventListeners() {
   window.addEventListener('resize', setCanvasDimensions);
+  window.addEventListener('keydown', (event) => {
+    const keyCode = event.keyCode;
+    const button = document.querySelector(`.soundTriggerContainer button[data-char-code="${keyCode}"]`);
 
-  const recordButton = document.querySelector('#toggleRecord');
-  recordButton.addEventListener('click', toggleRecordState);
+    const def = Object.entries(soundDefinitions).find(([key, val]) => {
+      return val.soundDef.charCode === keyCode;
+    });
 
-  const stopAllButton = document.querySelector('#stopAll');
-  stopAllButton.addEventListener('click', stopAll);
-}
+    if (def) {
+      const [defId] = def;
 
-function toggleRecordState(event) {
-  const triggerEl = event.currentTarget;
-  const recordingActive = triggerEl.classList.contains('active');
+      soundDefinitions[defId].active = !soundDefinitions[defId].active;
+    }
 
-  if (recordingActive) {
-    recorder.stop();
-    save(soundFile, 'locked-groove-mix.wav');
-    triggerEl.classList.remove('active');
-
-    return
-  }
-
-  triggerEl.classList.add('active');
-
-  recorder = new p5.SoundRecorder();
-  soundFile = new p5.SoundFile();
-
-  recorder.record(soundFile);
+    if (button) {
+      toggleSoundTrigger(button)
+    }
+  });
 }
 
 function draw() {
   background('black');
+
   Object.values(soundDefinitions).forEach(viz => viz.visualize());
 }
