@@ -667,6 +667,8 @@ function stopAll() {
 function initEventListeners() {
   window.addEventListener('resize', setCanvasDimensions);
   window.addEventListener('keydown', (event) => {
+    getAudioContext().resume();
+    
     const keyCode = event.keyCode;
     const button = document.querySelector(`.soundTriggerContainer button[data-char-code="${keyCode}"]`);
 
