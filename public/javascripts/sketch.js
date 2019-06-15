@@ -443,12 +443,6 @@ function preload() {
  */
 const toggleSoundTrigger = (el, force) => {
   el.classList.toggle('active', force);
-
-  if (document.querySelector('.soundTrigger.active')) {
-    soundBoardContainer.classList.add('active');
-  } else {
-    soundBoardContainer.classList.remove('active');
-  }
 };
 
 function stopAll() {
