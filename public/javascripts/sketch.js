@@ -89,14 +89,14 @@ const ParticleScurryVisualization = class extends Visualization {
     noStroke();
 
     for (let i = 0; i < 256; i++) {
-      const thisLevel = map(spectrum[i], 0, 255, 0, 1) * 2.5;
+      const thisLevel = map(spectrum[i], 0, 255, 0, 1) * 1.5;
 
-      this.particles[i].position.y = (spectrum[i] * 5) - (height / 8);
+      this.particles[i].position.y = (spectrum[i] * 1.5) - (height / 8);
       this.particles[i].position.x += this.particles[i].speed.x / (thisLevel);
       if (this.particles[i].position.x > width) this.particles[i].position.x = 0;
       this.particles[i].diameter = map(thisLevel, 0, 1, 0, 100) * this.particles[i].scale;
 
-      const opacity = map(level, 0, 0.5, 100, 150);
+      const opacity = map(level, 0, 0.8, 100, 150);
       this.particles[i].color = [36, 39, 45, opacity];
 
       fill(this.particles[i].color);
@@ -120,16 +120,6 @@ const LineVibrationVisualization = class extends Visualization {
   }
 };
 
-const ArcVisualization = class extends Visualization {
-  visualize(level) {
-    const size = map(level, 0, 1, 0, 550);
-
-    stroke(lightGray);
-    strokeWeight(4);
-    ellipse(width / 4, height / 4, (width / 2) + 10, size * 10)
-  }
-};
-
 const HelixVisualization = class extends Visualization {
   constructor() {
     super();
@@ -142,7 +132,7 @@ const HelixVisualization = class extends Visualization {
   visualize(level) {
     angleMode(RADIANS);
 
-    this.theta += map(level, 0, 0.5, 0, 0.3);
+    this.theta += map(level, 0, 1.6, 0, 0.3);
     const w = width / 2;
     this.yvalues = new Array(floor(w / this.spacing));
 
@@ -153,19 +143,18 @@ const HelixVisualization = class extends Visualization {
     }
 
     noStroke();
-    const color = map(level, 0, 0.25, 2, 255);
+    const color = map(level, 0, 1, 2, 255);
     fill(color, color, color);
     for (let i = 0; i < this.yvalues.length; i++) {
       ellipse(i * this.spacing, height / 5 + this.yvalues[i], 16, 16);
       ellipse(i * this.spacing, height / 5 - this.yvalues[i], 16, 16);
-
     }
   }
 };
 
 const RadialVisualization = class extends Visualization {
   visualize(level) {
-    const color = level > 0.082 ? dullWhite : red;
+    const color = level > 0.4 ? dullWhite : red;
     this.levelHistory.push(level);
 
     stroke(color);
@@ -174,7 +163,7 @@ const RadialVisualization = class extends Visualization {
 
     beginShape();
     for (let i = 1; i < this.levelHistory.length; i++) {
-      const r = map(this.levelHistory[i], 0, 0.2, 10, 750);
+      const r = map(this.levelHistory[i], 0, 0.85, 10, 1000);
       const x = (width / 2) + (r * cos(i + 210));
       const y = (height / 4) + (r * sin(i + 210));
 
@@ -225,14 +214,14 @@ const SpiralVisualization = class extends Visualization {
 
 const AmpVisualization = class extends Visualization {
   visualize(level) {
-    this.levelHistory.push(level * 2);
+    this.levelHistory.push(level);
 
     stroke(red);
     strokeWeight(2);
 
     beginShape();
     for (let i = 1; i < this.levelHistory.length; i++) {
-      const y = map(this.levelHistory[i], 0, 0.5, height / 2, 0);
+      const y = map(this.levelHistory[i], 0, 0.6, height / 2, 0);
       vertex(i, y);
     }
     endShape();
@@ -245,77 +234,15 @@ const AmpVisualization = class extends Visualization {
 
 const EllipseVisualization = class extends Visualization {
   visualize(level) {
-    const weight = level > 0.2 ? 12 : 4;
-    const color = level > 0.2 ? dullWhite : lighterGray;
-    const size = map(level, 0, 0.3, 0, 200);
+    const weight = level > 0.3 ? 16 : 4;
+    const color = level > 0.4 ? dullWhite : lighterGray;
+    const size = map(level, 0, 0.6, 0, 200);
     const randomMultiplier = random(-(width / 2), width / 2);
     const x = width / 4;
 
     stroke(color);
     strokeWeight(weight);
     ellipse(x + randomMultiplier, (height / 4) - (height / 6), size, size);
-  }
-};
-
-const SnowVisualization = class extends Visualization {
-  visualize(level, spectrum) {
-    const totalPts = spectrum.length / 2;
-    const steps = totalPts + 1;
-    let rand = 0;
-
-    for (let i = 1; i < steps; i++) {
-      const x = ((width / 2) / steps) * i;
-      const y = (height / 12) + random(-rand, rand);
-      const color = map(x, 0, width / 2, 80, 240);
-      strokeWeight(1);
-      stroke(color, color, color);
-      point(x, y);
-
-      const range = map(spectrum[i], 0, 200, 1, 25);
-      rand += random(-range, range);
-    }
-  }
-};
-
-
-const RotatingWaveVisualization = class extends Visualization {
-  constructor() {
-    super();
-    this.phase = 0;
-  }
-
-  visualize(level, spectrum) {
-    angleMode(RADIANS);
-    let speed = 0.03;
-    let maxCircleSize = 15;
-    let numRows = 10;
-    let numCols = 16;
-    let numStrands = 3;
-
-    let colorA = color(28, 32, 38, 50);
-    let colorB = color(120, 120, 120, 50);
-
-    this.phase = frameCount * speed;
-    const multiplier = map(level, 0, 0.3, 1, 10);
-
-    for (let strand = 0; strand < numStrands; strand += 1) {
-      let strandPhase = this.phase + map(strand, 0, numStrands, 0, TWO_PI);
-
-      for (let col = 0; col < numCols; col += 1) {
-        let colOffset = map(col, 0, numCols, 0, TWO_PI);
-        let x = map(col, 0, numCols, 50, width - 50);
-
-        for (let row = 0; row < numRows; row += 1) {
-          let y = height / 4 + row * 10 + sin(strandPhase + colOffset) * 150;
-          let sizeOffset = (cos(strandPhase - (row / numRows) + colOffset) + 1) * 0.7;
-          let circleSize = sizeOffset * maxCircleSize * multiplier;
-
-          noStroke();
-          fill(lerpColor(colorA, colorB, row / numRows));
-          ellipse(x, y, circleSize, circleSize);
-        }
-      }
-    }
   }
 };
 
@@ -343,7 +270,7 @@ const FlowerVisualization = class extends Visualization {
     this.angle2 += 5;
     const offset1 = map(max(lowSpectrum), 0, 300, 10, 320);
     const offset2 = map(max(highSpectrum), 0, 130, 10, 320);
-    const color = map(level, 0, 0.2, 0, 230);
+    const color = map(level, 0, 0.6, 0, 230);
     const val1 = cos(radians(this.angle1)) * offset1;
     const val2 = cos(radians(this.angle2)) * offset2;
 
@@ -371,10 +298,10 @@ const FlowerVisualization = class extends Visualization {
 
 const StationaryCircleVisualization = class extends Visualization {
   visualize(level) {
-    const size = map(level, 0, 0.5, 0, 300);
-    const r = map(level, 0, 0.5, 18, 36 * 3);
-    const g = map(level, 0, 0.5, 18, 39 * 3);
-    const b = map(level, 0, 0.5, 18, 45 * 3);
+    const size = map(level, 0, 0.65, 0, 300);
+    const r = map(level, 0, 0.55, 18, 36 * 3);
+    const g = map(level, 0, 0.55, 18, 39 * 3);
+    const b = map(level, 0, 0.55, 18, 45 * 3);
 
     strokeWeight(level * 150);
     stroke(r, g, b);
@@ -420,6 +347,8 @@ const VisualizationDefinition = class {
     const level = masterSound.getLevel();
     const spectrum = masterFFT.analyze();
 
+    // console.log(`level: ${level}`);
+
     if (level || spectrum) {
       noFill();
       this.viz.visualize(level, spectrum);
@@ -428,8 +357,6 @@ const VisualizationDefinition = class {
 };
 
 let soundDefinitions;
-let recorder;
-let soundFile;
 let soundDefs;
 const defaultFadeDuration = 250;
 let soundBoardContainer;
@@ -438,7 +365,6 @@ let triggerGroupSize = 7;
 let masterSound;
 const masterFFT = new p5.FFT();
 
-// preload is called directly before setup()
 function preload() {
   soundDefs = {
     lockGroove1: {
@@ -613,7 +539,7 @@ function setup() {
   //   console.log(deviceList);
   //   console.log('********');
   //
-  //   masterSound.setSource(2);
+  //   masterSound.setSource(0);
   // });
 }
 
@@ -668,7 +594,7 @@ function initEventListeners() {
   window.addEventListener('resize', setCanvasDimensions);
   window.addEventListener('keydown', (event) => {
     getAudioContext().resume();
-    
+
     const keyCode = event.keyCode;
     const button = document.querySelector(`.soundTriggerContainer button[data-char-code="${keyCode}"]`);
 
