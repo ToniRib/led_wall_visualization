@@ -659,6 +659,11 @@ function setCanvasDimensions() {
   canvas.style.width = '100%';
 }
 
+function stopAll() {
+  document.querySelectorAll('.soundTriggerContainer button').forEach((el) => toggleSoundTrigger(el, false));
+  Object.values(soundDefinitions).forEach(def => def.active = false)
+}
+
 function initEventListeners() {
   window.addEventListener('resize', setCanvasDimensions);
   window.addEventListener('keydown', (event) => {
@@ -673,6 +678,10 @@ function initEventListeners() {
       const [defId] = def;
 
       soundDefinitions[defId].active = !soundDefinitions[defId].active;
+    }
+
+    if (keyCode === 187) {
+      stopAll();
     }
 
     if (button) {

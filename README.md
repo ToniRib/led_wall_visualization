@@ -23,3 +23,5 @@ Uses an audio source (default is microphone) to run 10 different visualizations 
 8. Grey concentric circles (amplitude)
 9. White/red bouncing flowers (FFT)
 0. White moving circles (amplitude)
+
+`+`. Stop all!
