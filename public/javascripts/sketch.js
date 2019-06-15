@@ -174,7 +174,7 @@ const RadialVisualization = class extends Visualization {
 
     beginShape();
     for (let i = 1; i < this.levelHistory.length; i++) {
-      const r = map(this.levelHistory[i], 0, 0.2, 10, 1000);
+      const r = map(this.levelHistory[i], 0, 0.2, 10, 750);
       const x = (width / 2) + (r * cos(i + 210));
       const y = (height / 4) + (r * sin(i + 210));
 
